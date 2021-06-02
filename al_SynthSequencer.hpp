@@ -173,7 +173,32 @@ struct SynthEvent {
  *
  */
 
+ typedef struct Sequence {
+        std::vector<SynthVoice*> voices;
+        Timer timer;
+        long length = -1;
+        bool active = false;
+
+        void print(int d) {
+            printf("seq %d: ", d);
+            for (int i = 0; i < voices.size(); i++) {
+                printf("%f ", voices[i]->getInternalParameterValue("frequency"));
+            }
+            printf("\n");
+            fflush(stdout);
+        }
+
+        void toggleActive() {
+          std::cout << active << std::endl;
+          active = !active;
+        }
+
+    } Sequence;
+
 class SynthSequencer {
+
+
+  
 public:
   SynthSequencer(TimeMasterMode masterMode = TimeMasterMode::TIME_MASTER_CPU) {
     mMasterMode = masterMode;
@@ -189,6 +214,9 @@ public:
       mCpuThread->join();
     }
   }
+
+  //getvector
+  // std::vector<Sequence> getSequenceVector();
 
   /// Insert this function within the audio callback
   void render(AudioIOData &io);
@@ -302,6 +330,8 @@ public:
   void operator<<(PolySynth &synth) { return registerSynth(synth); }
 
 private:
+
+  // std::vector<Sequence> sequences;
   PolySynth *mPolySynth;
   std::unique_ptr<PolySynth> mInternalSynth;
 

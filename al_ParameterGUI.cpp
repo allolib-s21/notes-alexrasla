@@ -733,37 +733,18 @@ ParameterGUI::drawPresetHandler(PresetHandler *presetHandler, int presetColumns,
   return state;
 }
 
-void ParameterGUI::drawSequenceHandler(PresetHandler *presetHandler, int presetColumns,
+void ParameterGUI::drawSequenceHandler(std::vector<Sequence>* sequences, int presetColumns,
                                 int presetRows) {
-  static std::map<PresetHandler *, PresetHandlerState> stateMap;
-  if (stateMap.find(presetHandler) == stateMap.end()) {
-    //        std::cout << "Created state for " << (unsigned long)
-    //        presetHandler
-    //        << std::endl;
-    stateMap[presetHandler] =
-        PresetHandlerState{"", 0, presetHandler->availablePresetMaps()};
-    if (stateMap[presetHandler].mapList.size() > 0) {
-      stateMap[presetHandler].currentBank = stateMap[presetHandler].mapList[0];
-      stateMap[presetHandler].currentBankIndex = 0;
-    }
-    presetHandler->registerPresetMapCallback([&](std::string mapName) {
-      stateMap[presetHandler].currentBank = mapName;
-    });
-  }
-  PresetHandlerState &state = stateMap[presetHandler];
-  float fontSize = ImGui::GetFontSize();
-
-  std::string id = std::to_string((uint64_t)presetHandler);
-  std::string suffix = "##PresetHandler" + id;
-  ImGui::PushID(suffix.c_str());
+  // static std::map<PresetHandler *, PresetHandlerState> stateMap;
+  
 
   if (ImGui::CollapsingHeader(
-          ("Presets " + presetHandler->getCurrentPath()).c_str(),
+          "Sequence Handler",
           ImGuiTreeNodeFlags_CollapsingHeader |
               ImGuiTreeNodeFlags_DefaultOpen)) {
-    int selection = presetHandler->getCurrentPresetIndex();
-    std::string currentPresetName = presetHandler->getCurrentPresetName();
-    size_t delim_index = 0;
+  //   int selection = presetHandler->getCurrentPresetIndex();
+  //   std::string currentPresetName = presetHandler->getCurrentPresetName();
+  //   size_t delim_index = 0;
     // if (currentPresetName.length() == 0)
     //   currentPresetName = "none";
     // else
@@ -775,44 +756,54 @@ void ParameterGUI::drawSequenceHandler(PresetHandler *presetHandler, int presetC
     //               currentPresetName.substr(delim_index).c_str());
     // else
     //   ImGui::Text("Current Preset: %s", currentPresetName.c_str());
-    int counter = state.presetHandlerBank * (presetColumns * presetRows);
-    if (state.storeButtonState) {
-      ImGui::PushStyleColor(ImGuiCol_Text, 0xff0000ff);
-    }
+
+    // for (int i = 0; sequences->size(); i++) {
+    //   std::cout << "here" << sequences->at(i).active << std::endl;
+    // }
+
+    int counter = 0;
+    // if (state.storeButtonState) {
+    //   ImGui::PushStyleColor(ImGuiCol_Text, 0xff0000ff);
+    // }
     float presetWidth = (ImGui::GetContentRegionAvail().x / 12.0f) - 8.0f;
     for (int row = 0; row < presetRows; row++) {
       for (int column = 0; column < presetColumns; column++) {
         std::string name = std::to_string(counter);
         ImGui::PushID(counter);
 
-        bool is_selected = selection == counter;
+        bool is_selected = false;
         if (is_selected) {
           ImGui::PushStyleColor(ImGuiCol_Border,
                                 ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+          // std::cout << "here" << std::endl;
         }
 
         const bool selectableClicked =
             ImGui::Selectable(name.c_str(), is_selected, 0,
                               ImVec2(presetWidth, ImGui::GetFontSize() * 1.2f));
         if (selectableClicked) {
+          std::cout << "toggling active for sequence " << name.c_str() << " ";
+          // sequences->at(i).active
 
-          if (state.storeButtonState) {
-            std::string saveName = state.enteredText;
-            if (saveName.size() == 0) {
-              saveName = name;
-            }
-            presetHandler->storePreset(counter, saveName.c_str());
-            selection = counter;
-            state.storeButtonState = false;
-            ImGui::PopStyleColor();
-            state.enteredText.clear();
-          } else {
-            if (presetHandler->recallPreset(counter) !=
-                "") { // Preset is available
-              selection = counter;
-            }
-          }
+          sequences->at(atoi(name.c_str())).toggleActive();
         }
+        //   if (state.storeButtonState) {
+        //     std::string saveName = state.enteredText;
+        //     if (saveName.size() == 0) {
+        //       saveName = name;
+        //     }
+        //     presetHandler->storePreset(counter, saveName.c_str());
+        //     selection = counter;
+        //     state.storeButtonState = false;
+        //     ImGui::PopStyleColor();
+        //     state.enteredText.clear();
+        //   } else {
+        //     if (presetHandler->recallPreset(counter) !=
+        //         "") { // Preset is available
+        //       selection = counter;
+        //     }
+        //   }
+        // }
 
         // if (ImGui::IsItemHovered()) { // tooltip showing preset name
         //   const std::string currentlyhoveringPresetName =
@@ -821,118 +812,16 @@ void ParameterGUI::drawSequenceHandler(PresetHandler *presetHandler, int presetC
         //     ImGui::SetTooltip("%s", currentlyhoveringPresetName.c_str());
         //   }
         // }
-        if (is_selected) {
-          ImGui::PopStyleColor(1);
-        }
+        // if (is_selected) {
+        //   ImGui::PopStyleColor(1);
+        // }
         if (column < presetColumns - 1)
           ImGui::SameLine();
         counter++;
         ImGui::PopID();
       }
     }
-    // if (state.storeButtonState) {
-    //   ImGui::PopStyleColor();
-    // }
-    // if (ImGui::Button("<-")) {
-    //   state.presetHandlerBank -= 1;
-    //   if (state.presetHandlerBank < 0) {
-    //     state.presetHandlerBank = 4;
-    //   }
-    // }
-    // ImGui::SameLine();
-    // if (ImGui::Button("->")) {
-    //   state.presetHandlerBank += 1;
-    //   if (state.presetHandlerBank > 4) {
-    //     state.presetHandlerBank = 0;
-    //   }
-    // }
-    // ImGui::SameLine(0.0f, 40.0f);
-
-    // if (state.storeButtonState) {
-    //   ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0, 0.0, 0.0, 1.0));
-    // }
-    // std::string storeText = state.storeButtonState ? "Cancel" : "Store";
-    // bool storeButtonPressed = ImGui::Button(storeText.c_str(), ImVec2(100, 0));
-    // if (state.storeButtonState) {
-    //   ImGui::PopStyleColor();
-    // }
-    // if (storeButtonPressed) {
-    //   state.storeButtonState = !state.storeButtonState;
-    //   //          if (state.storeButtonState) {
-    //   //            state.enteredText = currentPresetName;
-    //   //          }
-    // }
-    // if (state.storeButtonState) {
-    //   char buf1[64];
-    //   strncpy(buf1, state.enteredText.c_str(), 63);
-    //   ImGui::Text("Store preset as:");
-    //   ImGui::SameLine();
-    //   if (ImGui::InputText("preset", buf1, 64)) {
-    //     state.enteredText = buf1;
-    //   }
-    //   ImGui::Text("Click on a preset number to store.");
-    // } else {
-    //   //          ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
-    //   if (ImGui::BeginCombo("Preset Map", state.currentBank.data())) {
-    //     stateMap[presetHandler].mapList = presetHandler->availablePresetMaps();
-    //     for (auto mapName : stateMap[presetHandler].mapList) {
-    //       bool isSelected = (state.currentBank == mapName);
-    //       if (ImGui::Selectable(mapName.data(), isSelected)) {
-    //         state.currentBank = mapName;
-    //         presetHandler->setCurrentPresetMap(mapName);
-    //       }
-    //       if (isSelected) {
-    //         ImGui::SetItemDefaultFocus();
-    //       }
-    //     }
-    //     ImGui::EndCombo();
-    //   }
-    //   if (!state.newMap) {
-    //     ImGui::SameLine();
-    //     if (ImGui::Button("+")) {
-    //       state.newMap = true;
-    //     }
-    //   } else {
-    //     char buf2[64];
-    //     strncpy(buf2, state.newMapText.c_str(), 63);
-    //     ImGui::Text("New map:");
-    //     //              ImGui::SameLine();
-    //     ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f);
-    //     if (ImGui::InputText("", buf2, 64)) {
-    //       state.newMapText = buf2;
-    //     }
-    //     ImGui::PopItemWidth();
-    //     ImGui::SameLine();
-    //     if (ImGui::Button("Create")) {
-    //       auto path = File::conformDirectory(presetHandler->getCurrentPath()) +
-    //                   state.newMapText + ".presetMap";
-    //       // Create an empty file
-    //       ofstream file;
-    //       file.open(path, ios::out);
-    //       file.close();
-    //       state.newMap = false;
-
-    //       stateMap[presetHandler].mapList =
-    //           presetHandler->availablePresetMaps();
-    //     }
-    //     ImGui::SameLine();
-    //     if (ImGui::Button("Cancel")) {
-    //       state.newMapText = "";
-    //       state.newMap = false;
-    //     }
-    //   }
-    //   // TODO options to create new bank
-    //   //        ImGui::SameLine();
-    //   //          ImGui::PopItemWidth();
-    //   ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.2f);
-    //   float morphTime = presetHandler->getMorphTime();
-    //   if (ImGui::InputFloat("morph time", &morphTime, 0.0f, 20.0f)) {
-    //     presetHandler->setMorphTime(morphTime);
-    //   }
-    //   ImGui::PopItemWidth();
-    // }
-
-    //            ImGui::Text("%s", currentPresetName.c_str());
+    
   }
   ImGui::PopID();
   // return state;

@@ -11,6 +11,10 @@
 
 using namespace al;
 
+// std::vector<Sequence> getSequenceVector() {
+//   return sequences;
+// }
+
 void SynthSequencer::render(AudioIOData &io) {
   if (mMasterMode == TimeMasterMode::TIME_MASTER_AUDIO) {
     double timeIncrement =

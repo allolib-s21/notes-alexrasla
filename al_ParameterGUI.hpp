@@ -126,7 +126,7 @@ public:
   static void drawTrigger(std::vector<Trigger *> params, std::string suffix,
                           int index = 0);
   
-  static void drawSequenceHandler(PresetHandler *presetHandler, int presetColumns,
+  static void drawSequenceHandler(std::vector<Sequence>* sequences, int presetColumns,
                                 int presetRows);
   
   // These functions require additional state that is passed as reference
@@ -254,7 +254,7 @@ private:
 /// @ingroup UI
 template <class VoiceType> class SynthGUIManager {
 public:
-  SynthGUIManager(std::string name = "") {
+  SynthGUIManager(std::string name = "", std::vector<Sequence>* sequences = {}) {
     mControlVoice.init();
     for (auto *param : mControlVoice.triggerParameters()) {
       mPresetHandler << *param;
@@ -273,6 +273,8 @@ public:
     mRecorder.setDirectory(mName + "-data");
     //        mSequencer << *mSynth;
     mRecorder << mSequencer.synth();
+
+    this->sequences = sequences;
 
     //        template<class VoiceType>
     mSequencer.synth().template registerSynthClass<VoiceType>(
@@ -311,7 +313,7 @@ public:
       drawPresetSequencer();
       drawPresetSequencerRecorder();
     }
-    drawToggleSounds();
+    drawToggleSounds(sequences);
   }
 
   void setCurrentTab(int tab) {
@@ -352,8 +354,9 @@ public:
     ParameterGUI::drawPresetHandler(&mPresetHandler, columns, rows);
   }
 
-  void drawToggleSounds(int columns = 4, int rows = 4) {
-    ParameterGUI::drawSequenceHandler(&mPresetHandler, columns, rows);
+  void drawToggleSounds(std::vector<Sequence>* sequences, int columns = 4, int rows = 4) {
+    // std::vector<Sequence> sequences;
+    ParameterGUI::drawSequenceHandler(sequences, columns, rows);
   }
 
   
@@ -463,6 +466,7 @@ private:
   std::string mName;
   VoiceType mControlVoice;
 
+  std::vector<Sequence>* sequences;
   PresetHandler mPresetHandler;
   PresetSequencer mPresetSequencer;
   SequenceRecorder mPresetSequenceRecorder;
